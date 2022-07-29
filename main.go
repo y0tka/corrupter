@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"image"
+	"image/draw"
 	"image/png"
 	"log"
 	"math/rand"
@@ -97,20 +98,13 @@ func main() {
 	// trying to obtain raw pointers to color data, since .At(), .Set() are very slow
 	m_raw_stride, m_raw_pix := 0, []uint8(nil)
 
-	switch m.(type) {
-	default:
-		log.Fatal("unknown image type")
-	case *image.NRGBA:
-		m_raw := m.(*image.NRGBA)
-		m_raw_stride = m_raw.Stride
-		m_raw_pix = m_raw.Pix
-	case *image.RGBA:
-		m_raw := m.(*image.RGBA)
-		m_raw_stride = m_raw.Stride
-		m_raw_pix = m_raw.Pix
-	}
-
+	// convert any image to *Image.RGBA
 	b := m.Bounds()
+	nm := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(nm, m.Bounds(), m, b.Min, draw.Src)
+	m_raw := nm
+	m_raw_stride = m_raw.Stride
+	m_raw_pix = m_raw.Pix
 
 	// first stage is dissolve+block corruption
 	new_img := image.NewNRGBA(b)
